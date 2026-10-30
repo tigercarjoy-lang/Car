@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#05070d" />
+  <meta name="description" content="APEX RUSH - a high-graphics 3D arcade racing game. Race six supercars across three laps of the Neon Coast circuit." />
+  <title>APEX RUSH — 3D Racing</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏎️</text></svg>" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene"></canvas>
+
+    <div id="loading" class="loading">
+      <div class="loading__inner">
+        <div class="brand-mark">
+          <svg viewBox="0 0 100 60" aria-hidden="true"><path d="M6 50 L28 14 L44 34 L60 8 L94 50 Z" /></svg>
+        </div>
+        <h1 class="loading__title">APEX<span>RUSH</span></h1>
+        <p class="loading__sub">NEON COAST GRAND PRIX</p>
+        <div class="loading__bar"><i id="loading-fill"></i></div>
+        <p class="loading__status" id="loading-status">Warming up the grid…</p>
+      </div>
+    </div>
+
+    <div id="hud" class="hud" aria-hidden="true">
+      <div class="hud__top">
+        <div class="hud-panel hud-lap">
+          <span class="hud-label">LAP</span>
+          <strong><span id="hud-lap">1</span><small>/<span id="hud-lap-total">3</span></small></strong>
+        </div>
+        <div class="hud-panel hud-pos">
+          <span class="hud-label">POS</span>
+          <strong><span id="hud-pos">6</span><small>/6</small></strong>
+        </div>
+        <div class="hud-center">
+          <div class="hud-clock" id="hud-clock">00:00.000</div>
+          <div class="hud-split"><span>BEST <b id="hud-best">--:--.---</b></span><span>LAST <b id="hud-last">--:--.---</b></span></div>
+        </div>
+        <div class="hud-right">
+          <div class="hud-fps"><span id="hud-fps">--</span> FPS</div>
+          <div class="hud-actions">
+            <button id="btn-sound" class="icon-btn" aria-label="Toggle sound" title="Sound">◉</button>
+            <button id="btn-camera" class="icon-btn" aria-label="Change camera" title="Camera (C)">▣</button>
+            <button id="btn-pause" class="icon-btn" aria-label="Pause" title="Pause (P)">Ⅱ</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud__bottom">
+        <div class="minimap-wrap">
+          <div class="minimap-head"><span>NEON COAST</span><b>1.29 KM</b></div>
+          <canvas id="minimap" width="230" height="230"></canvas>
+        </div>
+        <div class="speedo">
+          <svg class="speedo__gauge" viewBox="0 0 220 220" aria-hidden="true">
+            <defs>
+              <linearGradient id="gaugeGrad" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0%" stop-color="#19e3ff" />
+                <stop offset="65%" stop-color="#7c5cff" />
+                <stop offset="100%" stop-color="#ff2f7d" />
+              </linearGradient>
+            </defs>
+            <circle class="speedo__track" cx="110" cy="110" r="88" />
+            <circle id="speedo-arc" class="speedo__fill" cx="110" cy="110" r="88" />
+          </svg>
+          <div class="speedo__readout">
+            <div class="speedo__speed" id="hud-speed">0</div>
+            <div class="speedo__unit">KM/H</div>
+            <div class="speedo__gear">GEAR <b id="hud-gear">1</b></div>
+          </div>
+          <div class="nitro">
+            <div class="nitro__label"><span>NITRO</span><span id="nitro-pct">100%</span></div>
+            <div class="nitro__bar"><i id="nitro-fill"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="countdown" class="countdown"></div>
+      <div id="toast" class="toast"></div>
+      <div id="wrongway" class="wrongway">WRONG WAY</div>
+
+      <div id="touch" class="touch">
+        <div class="touch__steer">
+          <button class="touch-btn" data-touch="left" aria-label="Steer left">◀</button>
+          <button class="touch-btn" data-touch="right" aria-label="Steer right">▶</button>
+        </div>
+        <div class="touch__pedals">
+          <button class="touch-btn touch-btn--brake" data-touch="brake" aria-label="Brake">BRAKE</button>
+          <button class="touch-btn touch-btn--boost" data-touch="boost" aria-label="Nitro">NITRO</button>
+          <button class="touch-btn touch-btn--gas" data-touch="gas" aria-label="Accelerate">GAS</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="menu" class="menu">
+      <div class="menu__grid">
+        <div class="menu__brand">
+          <p class="eyebrow">ARCADE RACING · 120 FPS</p>
+          <h1>APEX<span>RUSH</span></h1>
+          <p class="tagline">Six supercars. Three laps. One perfect line through the neon coast.</p>
+          <div class="menu__facts">
+            <div><b>6</b><span>CARS</span></div>
+            <div><b>3</b><span>LAPS</span></div>
+            <div><b>1.29</b><span>KM</span></div>
+            <div><b>120</b><span>FPS</span></div>
+          </div>
+        </div>
+
+        <div class="menu__panel">
+          <div class="panel-head"><span>SELECT YOUR MACHINE</span><b id="sel-class">HYPERCAR</b></div>
+          <div id="car-list" class="car-list"></div>
+
+          <div class="stats" id="car-stats">
+            <div class="stat"><span>TOP SPEED</span><div class="stat__bar"><i data-stat="speed"></i></div></div>
+            <div class="stat"><span>ACCELERATION</span><div class="stat__bar"><i data-stat="accel"></i></div></div>
+            <div class="stat"><span>HANDLING</span><div class="stat__bar"><i data-stat="handling"></i></div></div>
+            <div class="stat"><span>NITRO</span><div class="stat__bar"><i data-stat="nitro"></i></div></div>
+          </div>
+
+          <div class="menu__options">
+            <label class="opt">
+              <span>GRAPHICS</span>
+              <select id="quality">
+                <option value="ultra">ULTRA</option>
+                <option value="high" selected>HIGH</option>
+                <option value="performance">PERFORMANCE</option>
+              </select>
+            </label>
+            <label class="opt">
+              <span>CAMERA</span>
+              <select id="camera-mode">
+                <option value="chase" selected>CHASE</option>
+                <option value="hood">HOOD</option>
+                <option value="far">CINEMATIC</option>
+              </select>
+            </label>
+            <label class="opt">
+              <span>RACE LENGTH</span>
+              <select id="race-laps">
+                <option value="1">1 LAP</option>
+                <option value="3" selected>3 LAPS</option>
+                <option value="5">5 LAPS</option>
+              </select>
+            </label>
+          </div>
+
+          <button id="start" class="cta">START GAME</button>
+          <p class="menu__hint">WASD / ARROWS DRIVE · SHIFT NITRO · SPACE HANDBRAKE · C CAMERA · R RESET · P PAUSE</p>
+        </div>
+      </div>
+      <div class="menu__foot"><span>THREE.JS · WEBGL2</span><span>BUILT FOR 120 FPS</span><span>© APEX RUSH</span></div>
+    </div>
+
+    <div id="pause" class="modal hidden">
+      <div class="modal__card">
+        <p class="eyebrow">RACE CONTROL</p>
+        <h2>PAUSED</h2>
+        <div class="modal__actions">
+          <button id="resume" class="cta cta--sm">RESUME</button>
+          <button id="restart" class="ghost-btn">RESTART RACE</button>
+          <button id="quit" class="ghost-btn">QUIT TO GARAGE</button>
+        </div>
+        <p class="modal__hint">P TO RESUME</p>
+      </div>
+    </div>
+
+    <div id="results" class="modal hidden">
+      <div class="modal__card modal__card--wide">
+        <p class="eyebrow">CHEQUERED FLAG</p>
+        <h2 id="results-title">RACE COMPLETE</h2>
+        <p class="results-sub" id="results-sub">You finished P1</p>
+        <div class="results-table" id="results-table"></div>
+        <div class="modal__actions">
+          <button id="again" class="cta cta--sm">RACE AGAIN</button>
+          <button id="garage" class="ghost-btn">GARAGE</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="fatal" class="fatal hidden">
+      <div class="fatal__card">
+        <h2>WebGL unavailable</h2>
+        <p>This game needs WebGL2. Try a modern browser with hardware acceleration enabled.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
